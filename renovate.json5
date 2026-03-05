@@ -3,7 +3,7 @@
   packageRules: [
     {
       matchPackageNames: ["org.jetbrains.kotlin.plugin.serialization:org.jetbrains.kotlin.plugin.serialization.gradle.plugin"],
-      matchUpdateTypes: ["major"],
+      matchUpdateTypes: ["major", "minor"],
       enabled: false,
     },
   ],
