@@ -2,11 +2,24 @@ import org.jetbrains.kotlin.buildtools.api.ExperimentalBuildToolsApi
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import pl.allegro.tech.build.axion.release.domain.PredefinedVersionCreator
 
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath(libs.kotlin.serialization.gradle.plugin) {
+      version {
+        // Force the version of the compiler plugin, or the Kotlin BOM
+        // upgrades it to an incompatible version.
+        require(libs.versions.kotlin.compiler.get().toString())
+      }
+    }
+  }
+}
 plugins {
   `java-gradle-plugin`
   alias(libs.plugins.kotlin.jvm)
   alias(libs.plugins.tapmoc)
-  alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.pluginPublish)
   alias(libs.plugins.axionRelease)
   alias(libs.plugins.detekt)
