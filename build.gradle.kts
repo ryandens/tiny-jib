@@ -48,9 +48,9 @@ open class WorkaroundSerializationGradleSubplugin :
 }
 
 plugins.apply(WorkaroundSerializationGradleSubplugin::class.java)
-plugins.apply("org.jetbrains.kotlin.jvm")
 
 extensions.getByType(WorkaroundExtension::class.java).compilerVersion = libs.versions.kotlin.compiler.get()
+
 tapmoc {
   gradle("8.0.0")
 }
