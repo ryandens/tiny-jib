@@ -1,37 +1,23 @@
 import org.jetbrains.kotlin.buildtools.api.ExperimentalBuildToolsApi
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmExtension
 import pl.allegro.tech.build.axion.release.domain.PredefinedVersionCreator
 
-buildscript {
-  repositories {
-    mavenCentral()
-  }
-  dependencies {
-    classpath(libs.kotlin.serialization.gradle.plugin) {
-      version {
-        // Force the version of the compiler plugin, or the Kotlin BOM
-        // upgrades it to an incompatible version.
-        require(libs.versions.kotlin.compiler.get())
-      }
-    }
-  }
-}
 plugins {
   `java-gradle-plugin`
   alias(libs.plugins.kotlin.jvm)
   alias(libs.plugins.tapmoc)
+  alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.pluginPublish)
   alias(libs.plugins.axionRelease)
   alias(libs.plugins.detekt)
 }
 
-plugins.apply("org.jetbrains.kotlin.plugin.serialization")
-
 tapmoc {
   gradle("8.0.0")
 }
 
-kotlin {
+extensions.getByType(KotlinJvmExtension::class.java).apply {
   @OptIn(ExperimentalBuildToolsApi::class, ExperimentalKotlinGradlePluginApi::class)
   compilerVersion.set(libs.versions.kotlin.compiler.get())
 }
