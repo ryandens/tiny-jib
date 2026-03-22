@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import tel.schich.tinyjib.jib.ImageMetadataOutput
 import tel.schich.tinyjib.params.OUTPUT_FILE_NAME
+import tel.schich.tinyjib.util.MINIMUM_SUPPORTED_GRADLE_VERSION
 import tel.schich.tinyjib.util.escapeKotlinString
 import tel.schich.tinyjib.util.executeGradleDefaults
 import tel.schich.tinyjib.util.generateProject
@@ -22,7 +23,7 @@ class BasicFunctionalityTest {
     @Test
     fun canBuildMinimalTar() {
         val mainClass = "tinyjib.Main"
-        generateProject(tempDir, mainClass, "8.2", config = """
+        generateProject(tempDir, mainClass, MINIMUM_SUPPORTED_GRADLE_VERSION, config = """
             from {
                 image = "scratch"
             }

@@ -8,6 +8,7 @@ import java.nio.file.Path
 import kotlin.time.Duration.Companion.seconds
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import tel.schich.tinyjib.util.MINIMUM_SUPPORTED_GRADLE_VERSION
 import tel.schich.tinyjib.util.getProp
 
 class GradleAndJavaSupportTest {
@@ -34,22 +35,22 @@ class GradleAndJavaSupportTest {
 
     @Test
     fun pluginAppliesOnGradle8WithJava8() {
-        appliesOnGradleVersion(gradleVersion = "8.0", javaVersion = "8")
+        appliesOnGradleVersion(gradleVersion = MINIMUM_SUPPORTED_GRADLE_VERSION, javaVersion = "8")
     }
 
     @Test
     fun pluginAppliesOnGradle8WithJava11() {
-        appliesOnGradleVersion(gradleVersion = "8.0", javaVersion = "11")
+        appliesOnGradleVersion(gradleVersion = MINIMUM_SUPPORTED_GRADLE_VERSION, javaVersion = "11")
     }
 
     @Test
     fun pluginAppliesOnGradle8WithJava17() {
-        appliesOnGradleVersion(gradleVersion = "8.0", javaVersion = "17")
+        appliesOnGradleVersion(gradleVersion = MINIMUM_SUPPORTED_GRADLE_VERSION, javaVersion = "17")
     }
 
     @Test
     fun pluginAppliesOnGradle8WithJava21() {
-        appliesOnGradleVersion(gradleVersion = "8.0", javaVersion = "21")
+        appliesOnGradleVersion(gradleVersion = MINIMUM_SUPPORTED_GRADLE_VERSION, javaVersion = "21")
     }
 
     // Gradle 8.x doesn't understand java 25 versions
