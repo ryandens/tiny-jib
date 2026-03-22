@@ -12,6 +12,7 @@ serialization-json = "1.10.0"
 gradle-api = "8.0"
 junit = "5.12.2"
 junit-platform = "1.14.3"
+test-containers = "2.0.4"
 
 [libraries]
 jibCore = { module = "com.google.cloud.tools:jib-core", version.ref = "jib" }
@@ -21,6 +22,7 @@ serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-jso
 junit-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-platform" }
+test-containers = { module = "org.testcontainers:testcontainers", version.ref = "test-containers" }
 
 [plugins]
 # Note how we're using the compiler version here and not the gradle plugin version

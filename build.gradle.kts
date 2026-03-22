@@ -95,7 +95,7 @@ dependencies {
   implementation(libs.guava)
   compileOnly(libs.gradle.api)
 
-  testImplementation(gradleTestKit())
+  testImplementation(libs.test.containers)
   testImplementation(libs.junit.api)
   testRuntimeOnly(libs.junit.jupiter.engine)
   testRuntimeOnly(libs.junit.platform.launcher)

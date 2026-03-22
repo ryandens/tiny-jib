@@ -6,12 +6,15 @@ import kotlinx.serialization.json.decodeFromStream
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.testcontainers.containers.GenericContainer
 import tel.schich.tinyjib.jib.ImageMetadataOutput
 import tel.schich.tinyjib.params.OUTPUT_FILE_NAME
 import tel.schich.tinyjib.util.MINIMUM_SUPPORTED_GRADLE_VERSION
 import tel.schich.tinyjib.util.deleteDockerImage
 import tel.schich.tinyjib.util.escapeKotlinString
 import tel.schich.tinyjib.util.executeGradleDefaults
+import tel.schich.tinyjib.util.fetchConfig
+import tel.schich.tinyjib.util.fetchManifest
 import tel.schich.tinyjib.util.generateProject
 import tel.schich.tinyjib.util.inspectDockerImage
 import java.nio.file.Files
@@ -24,7 +27,7 @@ class BasicFunctionalityTest {
     @TempDir
     lateinit var tempDir: Path
 
-    private fun testCanBuildMinimalImage(task: String, imageName: String): String {
+    private fun testCanBuildMinimalImage(task: String, imageName: String): Pair<String, String> {
         val mainClass = "tinyjib.Main"
         generateProject(tempDir, mainClass, MINIMUM_SUPPORTED_GRADLE_VERSION, config = """
             from {
@@ -35,7 +38,8 @@ class BasicFunctionalityTest {
             }
             container {
                 mainClass = "${escapeKotlinString(mainClass)}"
-            }       
+            }
+            allowInsecureRegistries.set(true)
         """)
         val result = executeGradleDefaults(tempDir, listOf(task), javaVersion = "8", 90.seconds)
 
@@ -62,7 +66,7 @@ class BasicFunctionalityTest {
         val imageDigest = Files.readAllBytes(buildDir.resolve("$OUTPUT_FILE_NAME.digest")).decodeToString().trim()
         assertEquals(imageDigest, json.imageDigest)
 
-        return imageId
+        return imageId to imageDigest
     }
 
     @Test
@@ -73,15 +77,32 @@ class BasicFunctionalityTest {
     @Test
     fun canBuildMinimalDockerImage() {
         val name = "${UUID.randomUUID()}:latest"
-        val imageId = testCanBuildMinimalImage("tinyJibDocker", name)
+        val (imageId, _) = testCanBuildMinimalImage("tinyJibDocker", name)
         try {
             val dockerImage = inspectDockerImage(imageId)
-            println("Docker image: $dockerImage")
             assertEquals(imageId, dockerImage.id)
             assertEquals(emptyList<String>(), dockerImage.repoDigests)
             assertEquals(listOf(name), dockerImage.repoTags)
         } finally {
             deleteDockerImage(imageId)
+        }
+    }
+
+    @Test
+    fun canPublishMinimalImage() {
+        val container = GenericContainer("docker.io/library/registry:3.0.0")
+            .withExposedPorts(5000)
+        container.start()
+        val registryPort = container.getMappedPort(5000)
+        try {
+            val registry = "127.0.0.1:$registryPort"
+            val repo = "test/${UUID.randomUUID()}"
+            val (_, imageDigest) = testCanBuildMinimalImage("tinyJibPublish", "$registry/$repo:latest")
+            val manifest = fetchManifest(registry, repo, imageDigest)
+            val config = fetchConfig(registry, repo, manifest)
+            assertEquals("java", config.config.entrypoint.first())
+        } finally {
+            container.stop()
         }
     }
 }
