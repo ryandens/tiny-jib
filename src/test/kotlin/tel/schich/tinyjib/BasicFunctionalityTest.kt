@@ -45,17 +45,17 @@ class BasicFunctionalityTest {
 
         val buildDir = tempDir.resolve("build")
 
-        val json = Files.newInputStream(tempDir.resolve("$OUTPUT_FILE_NAME.json")).use {
+        val json = Files.newInputStream(buildDir.resolve("$OUTPUT_FILE_NAME.json")).use {
             @OptIn(ExperimentalSerializationApi::class)
             Json.decodeFromStream<ImageMetadataOutput>(it)
         }
 
         assertEquals(listOf("latest"), json.tags)
 
-        val imageId = Files.readAllBytes(buildDir.resolve("$OUTPUT_FILE_NAME.json")).decodeToString().trim()
+        val imageId = Files.readAllBytes(buildDir.resolve("$OUTPUT_FILE_NAME.id")).decodeToString().trim()
         assertEquals(imageId, json.imageId)
 
-        val imageDigest = Files.readAllBytes(buildDir.resolve("$OUTPUT_FILE_NAME.json")).decodeToString().trim()
+        val imageDigest = Files.readAllBytes(buildDir.resolve("$OUTPUT_FILE_NAME.digest")).decodeToString().trim()
         assertEquals(imageDigest, json.imageDigest)
     }
 }
