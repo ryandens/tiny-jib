@@ -8,7 +8,13 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.isDirectory
 
-fun generateProject(target: Path, qualifiedClassName: String, gradleVersion: String, config: String) {
+fun generateProject(
+    target: Path,
+    qualifiedClassName: String,
+    gradleVersion: String,
+    @Language("kotlin")
+    config: String,
+) {
     val pluginId = getProp("id")
     val version = getProp("version")
     val rootDir = Paths.get(getProp("rootDir"))
