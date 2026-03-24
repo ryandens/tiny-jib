@@ -38,10 +38,12 @@ fun inspectDockerImage(imageName: String): DockerImage {
     val result = runCommand(listOf("docker", "image", "inspect", imageName), 5.seconds)
     assertEquals(0, result.exitCode)
     assertEquals("", result.stderr)
+    val output = result.stdout
+    println("Decoding inspect output: $output")
     return try {
-        Json.decodeFromString<List<DockerImage>>(result.stdout).first()
+        Json.decodeFromString<List<DockerImage>>(output).first()
     } catch (t: Throwable) {
-        println("Failed to decode inspect output: ${result.stdout}")
+        println("Failed to decode inspect output:\n$output")
         throw t
     }
 }
