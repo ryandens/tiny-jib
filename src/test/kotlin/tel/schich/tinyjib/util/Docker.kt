@@ -15,7 +15,7 @@ data class DockerImageConfig(
     @SerialName("Env")
     val env: List<String> = emptyList(),
     @SerialName("Cmd")
-    val cmd: List<String> = emptyList(),
+    val cmd: List<String>? = null,
     @SerialName("WorkingDir")
     val workingDir: String? = null,
 )
@@ -39,7 +39,6 @@ fun inspectDockerImage(imageName: String): DockerImage {
     assertEquals(0, result.exitCode)
     assertEquals("", result.stderr)
     val output = result.stdout
-    println("Decoding inspect output: $output")
     return try {
         Json.decodeFromString<List<DockerImage>>(output).first()
     } catch (t: Throwable) {
