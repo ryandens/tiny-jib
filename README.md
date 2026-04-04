@@ -16,7 +16,6 @@ primarily due to the removal of many niche features and the switch to kotlin. Th
 ## Features
 
 * No support for build systems other than Gradle
-* No support for old Gradle versions
 * No support for PACKAGED containerization
 * No support for plugins/extensions
 * No support for Skaffold
