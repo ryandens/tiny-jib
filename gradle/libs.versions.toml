@@ -1,5 +1,6 @@
 [versions]
 pluginPublish = "2.1.1"
+pluginCompatibility = "1.0.0"
 jib = "0.28.1"
 guava = "33.5.0-jre"
 axionRelease = "1.21.1"
@@ -30,6 +31,7 @@ test-containers = { module = "org.testcontainers:testcontainers", version.ref = 
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin-compiler" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-gradle-plugin" }
 pluginPublish = { id = "com.gradle.plugin-publish", version.ref = "pluginPublish" }
+pluginCompatibility = { id = "org.gradle.plugin-compatibility", version.ref = "pluginCompatibility" }
 axionRelease = { id = "pl.allegro.tech.build.axion-release", version.ref = "axionRelease" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }
 tapmoc = { id = "com.gradleup.tapmoc", version.ref = "tapmoc" }
