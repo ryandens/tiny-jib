@@ -1,3 +1,4 @@
+import org.gradle.plugin.compatibility.compatibility
 import org.jetbrains.kotlin.buildtools.api.ExperimentalBuildToolsApi
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmExtension
@@ -13,6 +14,7 @@ plugins {
   alias(libs.plugins.kotlin.serialization).apply(false)
   alias(libs.plugins.tapmoc)
   alias(libs.plugins.pluginPublish)
+  alias(libs.plugins.pluginCompatibility)
   alias(libs.plugins.axionRelease)
   alias(libs.plugins.detekt)
 }
@@ -114,6 +116,11 @@ gradlePlugin {
       displayName = "Tiny Jib Gradle Plugin"
       description = "A heavily simplified version of Google's Jib plugin"
       tags = listOf("container", "jib")
+      compatibility {
+          features {
+              configurationCache = true
+          }
+      }
     }
   }
 }
