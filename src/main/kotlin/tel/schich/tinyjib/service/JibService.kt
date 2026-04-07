@@ -10,8 +10,11 @@ import com.google.cloud.tools.jib.api.LogEvent
 import com.google.cloud.tools.jib.api.Ports
 import com.google.cloud.tools.jib.api.RegistryImage
 import com.google.cloud.tools.jib.api.buildplan.AbsoluteUnixPath
+import com.google.cloud.tools.jib.api.buildplan.ContainerBuildPlan
 import com.google.cloud.tools.jib.api.buildplan.ImageFormat
 import com.google.cloud.tools.jib.frontend.CredentialRetrieverFactory
+import com.google.cloud.tools.jib.gradle.extension.JibGradlePluginExtension
+import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToStream
@@ -38,6 +41,8 @@ import java.nio.file.Paths
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
+import java.util.Optional
+import java.util.ServiceLoader
 import java.util.function.Consumer
 import kotlin.collections.map
 import kotlin.collections.orEmpty
@@ -195,7 +200,7 @@ abstract class JibService : BuildService<BuildServiceParameters.None> {
             .map { it.toPath() }
             .toList()
 
-        return javaContainerBuilder.toContainerBuilder().apply {
+        val result: JibContainerBuilder =  javaContainerBuilder.toContainerBuilder().apply {
             setFormat(ImageFormat.OCI)
             if (platforms.isNotEmpty()) {
                 setPlatforms(platforms)
@@ -228,6 +233,7 @@ abstract class JibService : BuildService<BuildServiceParameters.None> {
 
             configureExtraDirectoryLayers(extension, modificationTimeProvider)
         }
+        return result
     }
 
     fun buildImage(
@@ -253,6 +259,17 @@ abstract class JibService : BuildService<BuildServiceParameters.None> {
         if (forDocker) {
             jibContainerBuilder.setFormat(ImageFormat.Docker)
         }
+
+
+        val extensions = ServiceLoader.load(JibGradlePluginExtension::class.java).toList()
+        var buildPlan = jibContainerBuilder.toContainerBuildPlan()
+        for (extension: JibGradlePluginExtension<*> in extensions) {
+            buildPlan = runPluginExtension<Any>(extension.getExtraConfigType(), extension, buildPlan)
+            ImageReference.parse(buildPlan.baseImage); // to validate image reference
+        }
+
+
+        jibContainerBuilder.applyContainerBuildPlan(buildPlan)
 
         val jibContainer = containerizer
             .setOfflineMode(offlineMode)
@@ -281,5 +298,31 @@ abstract class JibService : BuildService<BuildServiceParameters.None> {
             @OptIn(ExperimentalSerializationApi::class)
             Json.encodeToStream(metadataOutput, file)
         }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun <T> runPluginExtension(
+        extraConfigType: Optional<*>,
+        extension: JibGradlePluginExtension<*>,
+        buildPlan: ContainerBuildPlan)
+    : ContainerBuildPlan {
+
+        return (extension as JibGradlePluginExtension<T>).extendContainerBuildPlan(
+            buildPlan,
+            mapOf(),
+            extraConfigType as Optional<T>,
+            { throw IllegalStateException("GradleData is not available in JibService") },
+            { level, message ->
+                val logEvent = when (level) {
+                    ExtensionLogger.LogLevel.ERROR -> LogEvent.error(message)
+                    ExtensionLogger.LogLevel.WARN -> LogEvent.warn(message)
+                    ExtensionLogger.LogLevel.LIFECYCLE -> LogEvent.lifecycle(message)
+                    ExtensionLogger.LogLevel.INFO -> LogEvent.info(message)
+                    ExtensionLogger.LogLevel.DEBUG -> LogEvent.debug(message)
+                }
+                logAdapter.accept(logEvent)
+            },
+        )
+
     }
 }

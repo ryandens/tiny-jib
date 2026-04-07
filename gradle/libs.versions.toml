@@ -3,6 +3,7 @@ pluginPublish = "2.1.1"
 pluginCompatibility = "1.0.0"
 jib = "0.28.1"
 guava = "33.6.0-jre"
+jibExtensionApi = "0.4.0"
 axionRelease = "1.21.1"
 detekt = "2.0.0-alpha.3"
 kotlin-gradle-plugin = "2.3.21"
@@ -17,6 +18,7 @@ test-containers = "2.0.5"
 
 [libraries]
 jibCore = { module = "com.google.cloud.tools:jib-core", version.ref = "jib" }
+jibExtensionApi = { module = "com.google.cloud.tools:jib-gradle-plugin-extension-api", version.ref = "jibExtensionApi" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 gradle-api = { module = "dev.gradleplugins:gradle-api", version.ref = "gradle-api" }
 serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization-json" }

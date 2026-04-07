@@ -94,6 +94,7 @@ repositories {
 dependencies {
   implementation(libs.serialization.json)
   implementation(libs.jibCore)
+  implementation(libs.jibExtensionApi)
   implementation(libs.guava)
   compileOnly(libs.gradle.api)
 
