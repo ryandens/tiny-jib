@@ -311,7 +311,7 @@ abstract class JibService : BuildService<BuildServiceParameters.None> {
             buildPlan,
             mapOf(),
             extraConfigType as Optional<T>,
-            { throw IllegalStateException("GradleData is not available in JibService") },
+            { throw IllegalStateException("GradleData is not available to extensions in tiny-jib") },
             { level, message ->
                 val logEvent = when (level) {
                     ExtensionLogger.LogLevel.ERROR -> LogEvent.error(message)
