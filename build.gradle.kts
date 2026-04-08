@@ -19,6 +19,13 @@ plugins {
   alias(libs.plugins.detekt)
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
+
 
 class WorkaroundExtension {
   var compilerVersion: String? = null
