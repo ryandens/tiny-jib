@@ -8,11 +8,13 @@ import tel.schich.tinyjib.params.OutputPathsParameters
 import tel.schich.tinyjib.params.TargetImageParameters
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.LocalState
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
+import tel.schich.tinyjib.params.ExtensionParameters
 
 const val DEFAULT_ALLOW_INSECURE_REGISTRIES: Boolean = false
 
@@ -29,6 +31,9 @@ abstract class TinyJibExtension(project: Project) {
     val dockerClient: DockerClientParameters = project.objects.newInstance(DockerClientParameters::class.java)
     @Nested
     val outputPaths: OutputPathsParameters = project.objects.newInstance(OutputPathsParameters::class.java, project)
+
+    @Nested
+    val pluginExtensions: ListProperty<ExtensionParameters> = project.objects.listProperty(ExtensionParameters::class.java)
 
     @get:Input
     abstract val allowInsecureRegistries: Property<Boolean>
