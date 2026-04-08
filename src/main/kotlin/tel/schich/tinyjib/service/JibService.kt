@@ -15,6 +15,8 @@ import com.google.cloud.tools.jib.api.buildplan.ImageFormat
 import com.google.cloud.tools.jib.frontend.CredentialRetrieverFactory
 import com.google.cloud.tools.jib.gradle.extension.JibGradlePluginExtension
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger
+import com.google.cloud.tools.jib.plugins.extension.JibPluginExtensionException
+import com.google.cloud.tools.jib.plugins.extension.NullExtension
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToStream
@@ -22,6 +24,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
+import org.gradle.api.provider.Property
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import org.gradle.api.specs.Spec
@@ -44,11 +47,13 @@ import java.time.format.DateTimeFormatterBuilder
 import java.util.Optional
 import java.util.ServiceLoader
 import java.util.function.Consumer
+import java.util.function.Predicate
 import kotlin.collections.map
 import kotlin.collections.orEmpty
 import kotlin.sequences.map
 import kotlin.text.split
 import kotlin.text.startsWith
+import tel.schich.tinyjib.params.ExtensionParameters
 
 abstract class JibService : BuildService<BuildServiceParameters.None> {
     private val logger: Logger = Logging.getLogger(javaClass)
@@ -260,11 +265,11 @@ abstract class JibService : BuildService<BuildServiceParameters.None> {
             jibContainerBuilder.setFormat(ImageFormat.Docker)
         }
 
-
-        val extensions = ServiceLoader.load(JibGradlePluginExtension::class.java).toList()
         var buildPlan = jibContainerBuilder.toContainerBuildPlan()
-        for (extension: JibGradlePluginExtension<*> in extensions) {
-            buildPlan = runPluginExtension<Any>(extension.getExtraConfigType(), extension, buildPlan)
+        val loadedExtensions = ServiceLoader.load(JibGradlePluginExtension::class.java).toList()
+        for (extensionParameters: ExtensionParameters in extension.pluginExtensions.get()) {
+            val pluginExtension = findConfiguredExtension(loadedExtensions, extensionParameters)
+            buildPlan = runPluginExtension<Any>(extensionParameters.extraConfiguration, extensionParameters.properties.get(), pluginExtension, buildPlan)
             ImageReference.parse(buildPlan.baseImage); // to validate image reference
         }
 
@@ -300,17 +305,42 @@ abstract class JibService : BuildService<BuildServiceParameters.None> {
         }
     }
 
+    private fun findConfiguredExtension(extensions : List<JibGradlePluginExtension<*>>, config: ExtensionParameters) : JibGradlePluginExtension<*> {
+        val matchesClassName =
+            Predicate { extension: JibGradlePluginExtension<*> -> extension.javaClass.getName() == config.extensionClass.get() }
+        val found =
+            extensions.stream().filter(matchesClassName).findFirst()
+        if (!found.isPresent) {
+            throw JibPluginExtensionException(
+                NullExtension::class.java,
+                "extension configured but not discovered on Jib runtime classpath: "
+                        + config.extensionClass.get()
+            )
+        }
+        return found.get()
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun <T> runPluginExtension(
-        extraConfigType: Optional<*>,
+        extraConfig: Property<*>,
+        properties: Map<String, String>,
         extension: JibGradlePluginExtension<*>,
         buildPlan: ContainerBuildPlan)
     : ContainerBuildPlan {
 
+        val config: Optional<T>
+        if(extraConfig.isPresent)  {
+            config = Optional.of(extraConfig.get()) as Optional<T>
+        } else {
+            config = Optional.empty()
+        }
+
+
+
         return (extension as JibGradlePluginExtension<T>).extendContainerBuildPlan(
             buildPlan,
-            mapOf(),
-            extraConfigType as Optional<T>,
+            properties,
+            config,
             { throw IllegalStateException("GradleData is not available to extensions in tiny-jib") },
             { level, message ->
                 val logEvent = when (level) {
