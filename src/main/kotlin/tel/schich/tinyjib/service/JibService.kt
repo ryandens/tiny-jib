@@ -20,13 +20,16 @@ import com.google.cloud.tools.jib.plugins.extension.NullExtension
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToStream
+import org.gradle.api.Action
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
+import javax.inject.Inject
 import org.gradle.api.specs.Spec
 import tel.schich.tinyjib.TinyJibExtension
 import tel.schich.tinyjib.TinyJibPlugin
@@ -56,6 +59,9 @@ import kotlin.text.startsWith
 import tel.schich.tinyjib.params.ExtensionParameters
 
 abstract class JibService : BuildService<BuildServiceParameters.None> {
+    @get:Inject
+    abstract val objectFactory: ObjectFactory
+
     private val logger: Logger = Logging.getLogger(javaClass)
 
     private val logAdapter = Consumer<LogEvent> {
@@ -328,16 +334,28 @@ abstract class JibService : BuildService<BuildServiceParameters.None> {
         buildPlan: ContainerBuildPlan)
     : ContainerBuildPlan {
 
-        val config: Optional<T>
-        if(extraConfig.isPresent)  {
-            config = Optional.of(extraConfig.get()) as Optional<T>
+        val typedExtension = extension as JibGradlePluginExtension<T>
+
+        val configClass: Class<T>? = typedExtension.extraConfigType.orElse(null)
+
+        val config: Optional<T> = if (configClass != null) {
+            val instance = try {
+                configClass.getDeclaredConstructor(ObjectFactory::class.java).newInstance(objectFactory)
+            } catch (_: NoSuchMethodException) {
+                objectFactory.newInstance(configClass)
+            }
+            if (extraConfig.isPresent) {
+                @Suppress("UNCHECKED_CAST")
+                (extraConfig.get() as Action<T>).execute(instance)
+            }
+            Optional.of(instance)
         } else {
-            config = Optional.empty()
+            Optional.empty()
         }
 
 
 
-        return (extension as JibGradlePluginExtension<T>).extendContainerBuildPlan(
+        return typedExtension.extendContainerBuildPlan(
             buildPlan,
             properties,
             config,

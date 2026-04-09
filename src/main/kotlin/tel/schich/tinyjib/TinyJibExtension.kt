@@ -15,10 +15,14 @@ import org.gradle.api.tasks.LocalState
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import tel.schich.tinyjib.params.ExtensionParameters
+import tel.schich.tinyjib.params.PluginExtensionsBuilder
+import tel.schich.tinyjib.params.SimplePluginExtensionsBuilder
 
 const val DEFAULT_ALLOW_INSECURE_REGISTRIES: Boolean = false
 
 abstract class TinyJibExtension(project: Project) {
+    private val objects = project.objects
+
     @Nested
     val from: BaseImageParameters = project.objects.newInstance(BaseImageParameters::class.java)
     @Nested
@@ -62,4 +66,6 @@ abstract class TinyJibExtension(project: Project) {
     fun extraDirectories(block: ExtraDirectoriesParameters.() -> Unit): Unit = extraDirectories.block()
     fun dockerClient(block: DockerClientParameters.() -> Unit): Unit = dockerClient.block()
     fun outputPaths(block: OutputPathsParameters.() -> Unit): Unit = outputPaths.block()
+    fun pluginExtensions(block: PluginExtensionsBuilder.() -> Unit): Unit =
+        SimplePluginExtensionsBuilder(pluginExtensions, objects).block()
 }
