@@ -2,7 +2,7 @@
 pluginPublish = "2.1.1"
 pluginCompatibility = "1.0.0"
 jib = "0.28.1"
-guava = "33.5.0-jre"
+guava = "33.6.0-jre"
 axionRelease = "1.21.1"
 detekt = "2.0.0-alpha.2"
 kotlin-gradle-plugin = "2.3.20"
