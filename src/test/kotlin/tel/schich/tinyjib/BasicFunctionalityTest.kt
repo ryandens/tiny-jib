@@ -22,14 +22,18 @@ import java.nio.file.Path
 import java.util.UUID
 import kotlin.collections.emptyList
 import kotlin.time.Duration.Companion.seconds
+import tel.schich.tinyjib.util.generateProjectWithExtension
 
 class BasicFunctionalityTest {
     @TempDir
     lateinit var tempDir: Path
 
-    private fun testCanBuildMinimalImage(task: String, imageName: String): Pair<String, String> {
+    private fun testCanBuildMinimalImage(task: String, imageName: String, testExtensions: Boolean = false): Pair<String, String> {
         val mainClass = "tinyjib.Main"
-        generateProject(tempDir, mainClass, MINIMUM_SUPPORTED_GRADLE_VERSION, config = """
+
+        if (testExtensions) {
+            generateProjectWithExtension(
+                tempDir, mainClass, MINIMUM_SUPPORTED_GRADLE_VERSION, config = """
             from {
                 image = "scratch"
             }
@@ -40,7 +44,29 @@ class BasicFunctionalityTest {
                 mainClass = "${escapeKotlinString(mainClass)}"
             }
             allowInsecureRegistries.set(true)
-        """)
+            pluginExtensions {
+                extension {
+                   extensionClass.set("com.google.cloud.tools.jib.gradle.extension.ownership.JibOwnershipExtension")
+                }
+            }
+        """
+            )
+        } else {
+            generateProject(
+                tempDir, mainClass, MINIMUM_SUPPORTED_GRADLE_VERSION, config = """
+            from {
+                image = "scratch"
+            }
+            to {
+                image = "${escapeKotlinString(imageName)}"
+            }
+            container {
+                mainClass = "${escapeKotlinString(mainClass)}"
+            }
+            allowInsecureRegistries.set(true)
+        """
+            )
+        }
         val result = executeGradleDefaults(tempDir, listOf(task), javaVersion = "8", 90.seconds)
 
         println("Exit code: ${result.exitCode}")
@@ -72,6 +98,11 @@ class BasicFunctionalityTest {
     @Test
     fun canBuildMinimalTar() {
         testCanBuildMinimalImage("tinyJibTar", "test:latest")
+    }
+
+    @Test
+    fun canBuildMinimalTarWithExtension() {
+        testCanBuildMinimalImage("tinyJibTar", "test:latest", true)
     }
 
     @Test

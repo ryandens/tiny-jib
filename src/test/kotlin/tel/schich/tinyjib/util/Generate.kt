@@ -35,6 +35,64 @@ fun generateProject(
     }
 }
 
+fun generateProjectWithExtension(
+    target: Path,
+    qualifiedClassName: String,
+    gradleVersion: String,
+    @Language("kotlin")
+    config: String,
+) {
+    val pluginId = getProp("id")
+    val version = getProp("version")
+    val rootDir = Paths.get(getProp("rootDir"))
+    val repoDir = URI(getProp("repoUri"))
+
+    try {
+        copyWrapper(target, rootDir)
+        writeWrapperProperties(target, gradleVersion)
+        writeBuildGradleKts(target, pluginId, version, config)
+        writeSettingsGradleKts(target, repoDir)
+        writeMainClass(target, qualifiedClassName)
+    } finally {
+        Files.walk(target).use {
+            for (path in it) {
+                println("Generated file: $path")
+            }
+        }
+    }
+}
+
+private fun writeBuildGradleKtsWithExtension(target: Path, pluginId: String, version: String, @Language("kotlin") config: String) {
+    val indentedConfig = config
+        .trimIndent()
+        .trimEnd()
+        .split("\n")
+        .map { it.trimEnd() }
+        .joinToString("\n") { "            ${it.trimEnd()}" }
+        .trimStart()
+
+    @Language("kotlin")
+    val content = """
+        buildscript {
+          dependencies {
+            classpath('com.google.cloud.tools:jib-ownership-extension-gradle:0.1.0')
+          }
+        }
+        plugins {
+            java
+            id("${escapeKotlinString(pluginId)}") version "${escapeKotlinString(version)}"
+        }
+
+        group = "tinyjib"
+        version = "1.0.0"
+
+        tinyJib {
+            $indentedConfig
+        }
+    """.trimIndent()
+    writeContent(target.resolve("build.gradle.kts"), content)
+}
+
 private fun writeBuildGradleKts(target: Path, pluginId: String, version: String, @Language("kotlin") config: String) {
     val indentedConfig = config
         .trimIndent()

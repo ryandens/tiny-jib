@@ -56,6 +56,7 @@ import kotlin.collections.orEmpty
 import kotlin.sequences.map
 import kotlin.text.split
 import kotlin.text.startsWith
+import org.gradle.api.Project
 import tel.schich.tinyjib.params.ExtensionParameters
 
 abstract class JibService : BuildService<BuildServiceParameters.None> {
