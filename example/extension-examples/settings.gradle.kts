@@ -1,6 +1,6 @@
 rootProject.name = "extension-examples"
 
-include(":jib-ownership")
+include(":javaagent")
 
 pluginManagement {
     repositories {
